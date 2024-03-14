@@ -1,5 +1,6 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from . models import Room
+from .forms import Roomform
 '''rooms=[
     {'id': 1 ,'name':'python project'},
     {'id': 2 ,'name':'first project'},
@@ -21,5 +22,36 @@ def room (request,pk):
     context={'room':room}        
     return render(request,'base/room.html',context)
 
-# Create your views here.
+
+def createRoom(request):
+    form=Roomform()
+    if request.method == 'POST':
+        form=Roomform(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('Home')
+    
+    context={'form':form}
+    return render(request,'base/room_form.html',context)
+
+
+def updateRoom(request,pk):
+    room=Room.objects.get(id=pk)
+    form=Roomform(instance=room)
+    if request.method == 'POST':
+        form=Roomform(request.POST,instance=room)
+        if form.is_valid():
+            form.save() 
+            return redirect('Home') 
+    context={'form':form}
+    return render(request,'base/room_form.html',context)
+
+def DeleteRoom(request,pk):
+    room=Room.objects.get(id=pk)
+    if request.method=='POST':
+        room.delete()
+        return redirect('Home')
+    return render(request,'base/delete.html',{'obj':room})
+
+
 
