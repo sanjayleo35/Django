@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
-from . models import Room
+from django.db.models import Q
+from . models import Room,Topic
 from .forms import Roomform
 '''rooms=[
     {'id': 1 ,'name':'python project'},
@@ -7,10 +8,22 @@ from .forms import Roomform
     {'id': 3 ,'name':'my django project'},
 ]'''
 
+def loginpage(request):
+    context={}
+    return render(request,'base/login_register.html',context)
+
+
 
 def Home (request):
-    rooms=Room.objects.all()
-    context={'rooms':rooms}
+    q=request.GET.get('q') if request.GET.get('q') != None else ''
+    rooms=Room.objects.filter(
+                              Q(topic__name__icontains=q ) |
+                              Q(name__icontains=q) |
+                              Q(description__contains=q)
+                              )
+    topics=Topic.objects.all()
+    room_count=rooms.count()
+    context={'rooms':rooms,'topics':topics,'room_count':room_count,}
     return render(request,'base/Home.html',context)
 
 def room (request,pk):
