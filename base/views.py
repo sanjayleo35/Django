@@ -1,4 +1,7 @@
 from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate,login,logout
 from django.db.models import Q
 from . models import Room,Topic
 from .forms import Roomform
@@ -8,9 +11,26 @@ from .forms import Roomform
     {'id': 3 ,'name':'my django project'},
 ]'''
 
-def loginpage(request):
+def loginPage(request):
+    if request.method=='POST':
+        username=request.POST.get('Username')
+        password=request.POST.get('Password')
+        try:
+            user=User.objects.get(username=username)
+        except:
+            messages.error(request,'USer does not exits')
+        user=authenticate(request,username=username,password=password)
+        if user is not None:
+            login(request,user)
+            return redirect('Home')
+        else:
+            messages.error(request,"User name or password doesn't match")
+            
     context={}
     return render(request,'base/login_register.html',context)
+def logoutUser(request):
+    logout(request)
+    return redirect('Home')
 
 
 
