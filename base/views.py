@@ -1,7 +1,10 @@
 from django.shortcuts import render, redirect
+from django.http import HttpResponse
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate,login,logout
+from django.contrib.auth.forms import UserCreationForm
 from django.db.models import Q
 from . models import Room,Topic
 from .forms import Roomform
@@ -12,8 +15,12 @@ from .forms import Roomform
 ]'''
 
 def loginPage(request):
+    page='login'
+    if request.user.is_authenticated:
+        return redirect("Home")
+    
     if request.method=='POST':
-        username=request.POST.get('Username')
+        username=request.POST.get('Username').lower()
         password=request.POST.get('Password')
         try:
             user=User.objects.get(username=username)
@@ -26,13 +33,26 @@ def loginPage(request):
         else:
             messages.error(request,"User name or password doesn't match")
             
-    context={}
+    context={'page':page}
     return render(request,'base/login_register.html',context)
 def logoutUser(request):
     logout(request)
     return redirect('Home')
 
-
+def registerPage(request):
+    form=UserCreationForm()
+    if request.method == 'POST':
+        form =UserCreationForm(request.POST)
+        if form.is_valid():
+            user=form.save(commit=False)
+            user.username=user.username.lower()
+            user.save()
+            login(request,user)
+            return redirect("Home")
+        else:
+            messages.error(request,'An error acquired during the Registration')
+    
+    return render(request,'base/login_register.html',{'form':form})
 
 def Home (request):
     q=request.GET.get('q') if request.GET.get('q') != None else ''
@@ -55,9 +75,10 @@ def room (request,pk):
     context={'room':room}        
     return render(request,'base/room.html',context)
 
-
+@login_required(login_url='/login')
 def createRoom(request):
     form=Roomform()
+    
     if request.method == 'POST':
         form=Roomform(request.POST)
         if form.is_valid():
@@ -67,10 +88,14 @@ def createRoom(request):
     context={'form':form}
     return render(request,'base/room_form.html',context)
 
-
+@login_required(login_url='/login')
 def updateRoom(request,pk):
     room=Room.objects.get(id=pk)
     form=Roomform(instance=room)
+    
+    if request.user != room.host:
+        return HttpResponse("you are restricted!!!")
+    
     if request.method == 'POST':
         form=Roomform(request.POST,instance=room)
         if form.is_valid():
@@ -79,8 +104,14 @@ def updateRoom(request,pk):
     context={'form':form}
     return render(request,'base/room_form.html',context)
 
+
+@login_required(login_url='/login')
 def DeleteRoom(request,pk):
     room=Room.objects.get(id=pk)
+    
+    if request.user != room.host:
+        return HttpResponse("you are restricted!!!")
+    
     if request.method=='POST':
         room.delete()
         return redirect('Home')
