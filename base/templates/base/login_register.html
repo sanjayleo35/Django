@@ -5,30 +5,24 @@
 <div>
     <form method="POST" action="">
         {% csrf_token %}
-<label>Username:</label>
-
-        <input type="text" name="Username" placeholder="enter the username"/>
+        <label>Username:</label>
+        <input type="text" name="username" placeholder="Enter the username"/>
         <label>Password:</label>
-
-        <input type="password" name="Password" placeholder="enter the Password"/>
-
-
-        <input type="submit" value="login"/>
+        <input type="password" name="password" placeholder="Enter the password"/>
+        <input type="submit" value="Login"/>
     </form>
-    <p>New user </p>
-    <a href="{% url 'register' %}">signup</a>
+    <p>New user?</p>
+    <a href="{% url 'register' %}">Sign up</a>
 </div>
-{%  else %}
+{% else %}
 <div>
     <form method="POST" action="">
         {% csrf_token %}
-        {{form.as_p}}
-
+        {{ form.as_p }}
         <input type="submit" value="Register"/>
     </form>
-    <p>Already signed up </p>
+    <p>Already signed up?</p>
     <a href="{% url 'login' %}">Login</a>
 </div>
-
-{% endif%}
-{%endblock content%}
+{% endif %}
+{% endblock content %}
